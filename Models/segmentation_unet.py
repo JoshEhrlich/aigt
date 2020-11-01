@@ -16,18 +16,29 @@ def segmentation_unet(input_size, num_classes, filter_multiplier=10, regularizat
     skips = []
     output = input_
 
-    num_layers = int(np.floor(np.log2(input_size)))
+    num_layers = int(np.floor(np.log2(input_size))) #do not change (could add more if every other layer does not increase the image size)
     down_conv_kernel_sizes = np.zeros([num_layers], dtype=int)
-    down_filter_numbers = np.zeros([num_layers], dtype=int)
-    up_conv_kernel_sizes = np.zeros([num_layers], dtype=int)
-    up_filter_numbers = np.zeros([num_layers], dtype=int)
-
+    down_filter_numbers = np.zeros([num_layers], dtype=int) #could change
+    up_conv_kernel_sizes = np.zeros([num_layers], dtype=int) #do not change
+    up_filter_numbers = np.zeros([num_layers], dtype=int) #could change
+    
+    #this for loop is good for modifications.
     for layer_index in range(num_layers):
         down_conv_kernel_sizes[layer_index] = int(3)
-        down_filter_numbers[layer_index] = int((layer_index + 1) * filter_multiplier + num_classes)
-        up_conv_kernel_sizes[layer_index] = int(4)
+        down_filter_numbers[layer_index] = (2**(layer_index)) * 8  #typical rule is the deeper you are the more filters. But there is no "real" method. Starting with 8 actually has meaning to check to see if yuo are going to each different pixels new line. You can double each layer (at deeper layers). num classes = 2
+        up_conv_kernel_sizes[layer_index] = int(4) #why is it four? Read up on this.
+        up_filter_numbers[layer_index] = 2**(num_layers - layer_index - 1) * 8 - 8 + num_classes
+        #have to make sure that in the final layer hte number of filters is two.
+    
+    """
+        for layer_index in range(num_layers):
+        down_conv_kernel_sizes[layer_index] = int(3)
+        down_filter_numbers[layer_index] = int((layer_index + 1) * filter_multiplier + num_classes) #typical rule is the deeper you are the more filters. But there is no "real" method. Starting with 8 actually has meaning to check to see if yuo are going to each different pixels new line. You can double each layer (at deeper layers). num classes = 2
+        up_conv_kernel_sizes[layer_index] = int(4) #why is it four? Read up on this.
         up_filter_numbers[layer_index] = int((num_layers - layer_index - 1) * filter_multiplier + num_classes)
-
+        #have to make sure that in the final layer hte number of filters is two.
+    """
+    #later on (after you mess with the above)
     for shape, filters in zip(down_conv_kernel_sizes, down_filter_numbers):
         skips.append(output)
         output = Conv2D(filters, (shape, shape), strides=2, padding="same", activation="relu",
