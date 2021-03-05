@@ -43,7 +43,8 @@ def segmentation_unet(input_size, num_classes, filter_multiplier=10, regularizat
                         )(output) #, bias_regularizer=l1(regularization_rate),  
         output = BatchNormalization()(output)
         skips.append(output)
-        output = MaxPooling2D(pool_size = (2,2))(output)
+        output = MaxPooling2D(pool_size = (4,4), strides = (2,2), padding = "same")(output)
+        print(output.get_shape())
         count += 1
     
     output = Conv2D((2*filters), (shape, shape), kernel_initializer="he_normal", padding = "same", strides=(1,1),  activation="relu")(output)
